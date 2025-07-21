@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { Link,useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
-import { MenuIcon, SearchIcon, XIcon,TicketPlus } from "lucide-react";
+import { MenuIcon, SearchIcon, XIcon, TicketPlus } from "lucide-react";
 import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
+import { useAppContext } from "../context/AppContxt";
 
 const Navbar = () => {
+  const { favoriteMovies } = useAppContext();
   const [isopen, setisopen] = useState(false);
   const { user } = useUser();
   const { openSignIn } = useClerk();
@@ -31,7 +33,8 @@ const Navbar = () => {
 
         <Link
           onClick={() => {
-            scrollTo(0, 0); setisopen(false);
+            scrollTo(0, 0);
+            setisopen(false);
           }}
           to="/"
         >
@@ -39,7 +42,8 @@ const Navbar = () => {
         </Link>
         <Link
           onClick={() => {
-            scrollTo(0, 0); setisopen(false);
+            scrollTo(0, 0);
+            setisopen(false);
           }}
           to="/movies"
         >
@@ -48,7 +52,8 @@ const Navbar = () => {
 
         <Link
           onClick={() => {
-            scrollTo(0, 0); setisopen(false);
+            scrollTo(0, 0);
+            setisopen(false);
           }}
           to="/"
         >
@@ -56,20 +61,24 @@ const Navbar = () => {
         </Link>
         <Link
           onClick={() => {
-            scrollTo(0, 0); setisopen(false);
+            scrollTo(0, 0);
+            setisopen(false);
           }}
           to="/"
         >
           Releases
         </Link>
-        <Link
-          onClick={() => {
-            scrollTo(0, 0); setisopen(false);
-          }}
-          to="/favorite"
-        >
-          Favorites
-        </Link>
+        {favoriteMovies.length > 0 && (
+          <Link
+            onClick={() => {
+              scrollTo(0, 0);
+              setIsOpen(false);
+            }}
+            to="/favorite"
+          >
+            Favorites
+          </Link>
+        )}
       </div>
 
       <div className="flex items-center gap-8">

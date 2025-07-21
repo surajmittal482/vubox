@@ -2,8 +2,10 @@ import React from 'react';
 import { StarIcon } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import timeFormat from '../lib/timeFormat';
+import { useAppContext } from '../context/AppContxt';
 
 const MovieCard = ({ movie }) => {
+  const {image_base_url}=useAppContext();
   const navigate = useNavigate();
 
   return (
@@ -15,7 +17,7 @@ const MovieCard = ({ movie }) => {
           navigate(`/movies/${movie._id}`);
           window.scrollTo(0, 0);
         }}
-        src={movie.backdrop_path}
+        src={image_base_url+movie.backdrop_path}
         alt={`Poster of ${movie.title}`}
         className='rounded-lg h-52 w-full object-cover object-right-bottom cursor-pointer'
       />
