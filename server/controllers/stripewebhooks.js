@@ -1,11 +1,10 @@
 import stripe from "stripe";
 import Booking from "../models/Booking.js";
 
-
 export const stripeWebhooks = async (request, response) => {
+  let event;
   const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
   const sig = request.headers["stripe-signature"];
-  let event;
 
   try {
     event = stripeInstance.webhooks.constructEvent(
@@ -14,34 +13,64 @@ export const stripeWebhooks = async (request, response) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (error) {
-    return response.status(400).send(`Webhook Error: ${error.message}`);
+    console.error("Webhook signature verification failed:", error.message);
+    return response.status(400).json({
+      success: false,
+      message: `Webhook Error: ${error.message}`
+    });
   }
 
   try {
     switch (event.type) {
-    case "payment_intent.succeeded": {
-      const paymentIntent = event.data.object;
-      const sessionList = await stripeInstance.checkout.sessions.list({
-        payment_intent: paymentIntent.id
-      });
+      case "payment_intent.succeeded": {
+        const paymentIntent = event.data.object;
+        if (!paymentIntent?.id) {
+          throw new Error("Invalid payment intent data");
+        }
 
-      const session = sessionList.data[0];
-      const { bookingId } = session.metadata;
+        const sessionList = await stripeInstance.checkout.sessions.list({
+          payment_intent: paymentIntent.id,
+          limit: 1
+        });
 
-      await Booking.findByIdAndUpdate(bookingId, {
-  isPaid: true,
-  paymentLink: ""
-});
+        if (!sessionList?.data?.[0]?.metadata?.bookingId) {
+          throw new Error("No valid booking ID found in session metadata");
+        }
 
-      break;
+        const { bookingId } = sessionList.data[0].metadata;
+
+        const updatedBooking = await Booking.findByIdAndUpdate(
+          bookingId,
+          {
+            isPaid: true,
+            paymentLink: ""
+          },
+          { new: true }
+        );
+
+        if (!updatedBooking) {
+          throw new Error(`Booking update failed for ID: ${bookingId}`);
+        }
+
+        console.log(`Successfully processed payment for booking: ${bookingId}`);
+        break;
+      }
+
+      default:
+        console.log('Unhandled event type:', event.type);
     }
 
-    default:
-      console.log('Unhandled event type:', event.type)
-  }
-  response.json({ received: true })
-  } catch (err) {
-     console.error("Webhook processing error:", err);
-  response.status(500).send("Internal Server Error");
+    return response.status(200).json({ 
+      success: true, 
+      received: true 
+    });
+
+  } catch (error) {
+    console.error("Webhook processing error:", error.message);
+    return response.status(500).json({
+      success: false,
+      message: "Webhook processing failed",
+      error: error.message
+    });
   }
 };
