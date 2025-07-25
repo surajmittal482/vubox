@@ -2,6 +2,8 @@ import stripe from "stripe";
 import Booking from "../models/Booking.js";
 
 export const stripeWebhooks = async (request, response) => {
+  console.log("Received Stripe webhook event");
+  console.dir(request.body, { depth: null, colors: true });
   let event;
   const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
   const sig = request.headers["stripe-signature"];
@@ -19,7 +21,8 @@ export const stripeWebhooks = async (request, response) => {
       message: `Webhook Error: ${error.message}`
     });
   }
-
+  console.log("✅ Stripe webhook received:");
+  console.dir(event, { depth: null, colors: true });
   try {
     switch (event.type) {
       case "payment_intent.succeeded": {
@@ -32,17 +35,19 @@ export const stripeWebhooks = async (request, response) => {
           payment_intent: paymentIntent.id,
           limit: 1
         });
-
+            console.log("Stripe session list:", sessionList);
         if (!sessionList?.data?.[0]?.metadata?.bookingId) {
           throw new Error("No valid booking ID found in session metadata");
         }
 
         const { bookingId } = sessionList.data[0].metadata;
+        console.log(`Processing payment for booking ID: ${bookingId}`);
 
         const updatedBooking = await Booking.findByIdAndUpdate(
           bookingId,
           {
             isPaid: true,
+            isBooked: true,
             paymentLink: ""
           },
           { new: true }
