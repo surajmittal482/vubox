@@ -60,19 +60,38 @@ const releaseSeatsAndDeleteBooking = inngest.createFunction(
 
     await step.run('check-payment-status', async () => {
       // logic to check payment and delete booking if unpaid
-      const bookingId = event.data.bookingId;
-const booking = await Booking.findById(bookingId);
+      try {
+        const bookingId = event.data.bookingId;
+        if (!bookingId) {
+          throw new Error('Booking ID is required');
+        }
 
-// If payment is not made, release seats and delete booking
-if (!booking.isPaid) {
-  const show = await Show.findById(booking.show);
-  booking.bookedSeats.forEach((seat) => {
-    delete show.occupiedSeats[seat];
-  });
-  show.markModified('occupiedSeats');
-  await show.save();
-  await Booking.findByIdAndDelete(booking._id);
-}
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+          console.log(`No booking found with ID: ${bookingId}`);
+          return;
+        }
+
+        // If payment is not made, release seats and delete booking
+        if (!booking.isPaid) {
+          const show = await Show.findById(booking.show);
+          if (!show) {
+            console.log(`No show found for booking: ${bookingId}`);
+            await Booking.findByIdAndDelete(booking._id);
+            return;
+          }
+
+          booking.bookedSeats.forEach((seat) => {
+            delete show.occupiedSeats[seat];
+          });
+          show.markModified('occupiedSeats');
+          await show.save();
+          await Booking.findByIdAndDelete(booking._id);
+          console.log(`Successfully released seats and deleted unpaid booking: ${bookingId}`);
+        }
+      } catch (error) {
+        console.error('Error in releaseSeatsAndDeleteBooking:', error.message);
+      }
 
     });
   }
