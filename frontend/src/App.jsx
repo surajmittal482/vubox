@@ -7,7 +7,7 @@ import MovieDetails from "./pages/MovieDetails";
 import SeatLayout from "./pages/SeatLayout";
 import MyBooking from "./pages/MyBooking";
 
-import Navbar from "./components/navbar";
+import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Favorite from "./pages/favorite";
 import Movies from "./pages/movies";
