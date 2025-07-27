@@ -9,8 +9,8 @@ import MyBooking from "./pages/MyBooking";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Favorite from "./pages/favorite";
-import Movies from "./pages/movies";
+import Favorite from "./pages/Favorite";
+import Movies from "./pages/Movies";
 import { Toaster } from "react-hot-toast";
 import Layout from "./pages/admin/Layout";
 import Dashboard from "./pages/admin/Dashboard";
